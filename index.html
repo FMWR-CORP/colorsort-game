@@ -1256,48 +1256,61 @@ body{
     width:48px;
   }
 }
-/* TABLET ONLY */
-@media (min-width: 769px) and (max-width: 1024px) {
+/* TABLET FIX ONLY */
+@media screen and (min-width: 769px) and (max-width: 1180px) and (hover: none) {
   .app{
-    flex-direction: column;
-    max-width: 760px;
-    width: calc(100% - 32px);
-    height: auto;
-    margin: 20px auto;
-    overflow: visible;
+    display:flex;
+    flex-direction:column;
+    width:calc(100% - 24px);
+    max-width:760px;
+    height:auto !important;
+    min-height:0 !important;
+    margin:16px auto;
+    overflow:visible;
+    border-radius:24px;
   }
 
   .game-side{
-    width: 100%;
-    flex: none;
-    min-width: 100%;
-    max-width: 100%;
-    overflow-y: visible;
-    padding: 14px 14px 28px;
+    width:100% !important;
+    flex:none !important;
+    min-width:100% !important;
+    max-width:100% !important;
+    overflow-y:visible;
+    padding:14px 12px 30px;
   }
 
   .chat-side{
-    width: 100%;
-    flex: none;
-    min-width: 100%;
-    max-width: 100%;
-    height: 420px;
-    border-left: none;
-    border-top: 3px solid var(--border);
-    margin-top: 8px;
+    width:100% !important;
+    flex:none !important;
+    min-width:100% !important;
+    max-width:100% !important;
+    height:360px;
+    border-left:none !important;
+    border-top:3px solid var(--border);
+    margin-top:10px;
   }
 
   .top-bar{
-    max-width: 100%;
+    width:100%;
+    max-width:560px;
+  }
+
+  .level-selector{
+    max-width:100%;
   }
 
   .tubes-grid{
-    max-width: 100%;
-    gap: 12px;
+    max-width:100%;
+    gap:12px;
+    margin-bottom:20px;
   }
 
   .tube-body{
-    width: 52px;
+    width:50px;
+  }
+
+  .btn-row{
+    margin-bottom:4px;
   }
 }
 </style>
