@@ -1313,6 +1313,38 @@ body{
     margin-bottom:4px;
   }
 }
+@media screen and (orientation: portrait) and (min-width: 769px) {
+  .app{
+    display:flex;
+    flex-direction:column;
+    width:calc(100% - 24px);
+    max-width:760px;
+    height:auto !important;
+    min-height:0 !important;
+    margin:16px auto;
+    overflow:visible;
+  }
+
+  .game-side{
+    width:100% !important;
+    flex:none !important;
+    min-width:100% !important;
+    max-width:100% !important;
+    overflow-y:visible;
+    padding:14px 12px 30px;
+  }
+
+  .chat-side{
+    width:100% !important;
+    flex:none !important;
+    min-width:100% !important;
+    max-width:100% !important;
+    height:360px;
+    border-left:none !important;
+    border-top:3px solid var(--border);
+    margin-top:10px;
+  }
+}
 </style>
 </head>
 <body>
