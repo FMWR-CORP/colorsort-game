@@ -893,7 +893,7 @@ body{
 }
 
 .m-name{
-  font-family:var(--fb);
+  font-family:"Segoe UI", Arial, Helvetica, sans-serif;
   font-size:16px;
   color:var(--pur);
   letter-spacing:1px;
@@ -925,7 +925,7 @@ body{
   border:2px solid var(--border);
   border-radius:999px;
   padding:12px 16px;
-  font-family:var(--fd);
+  font-family:"Segoe UI", Arial, Helvetica, sans-serif;
   font-size:18px;
   color:var(--text);
   outline:none;
@@ -1315,7 +1315,7 @@ body{
       </div>
 
       <div class="lb-section">
-        <div class="lb-title">☀️ Today's Best <span class="lb-tz">(New York)</span></div>
+        <div class="lb-title">☀️ Today's Top 3</div>
         <div id="lbToday"><div class="chat-empty">No records today~</div></div>
       </div>
 
@@ -1559,17 +1559,21 @@ async function tryUpdateRecord(lv, moves, timeSec){
   const l = lv + 1;
   const today = nyDateStr();
 
+  const isBetter = (a, b) => {
+    return a.moves < b.moves || (a.moves === b.moves && a.timeSec < b.timeSec);
+  };
+
   try{
     const ref = doc(db, 'leaderboard', 'alltime-lv' + l);
     const snap = await getDoc(ref);
     const data = snap.exists() ? (snap.data().scores || []) : [];
     const ex = data.find(x => x.name === playerName);
 
-    if(!ex || moves < ex.moves){
+    if(!ex || isBetter({ moves, timeSec }, ex)){
       const updated = data.filter(x => x.name !== playerName);
       updated.push({ name: playerName, moves, timeSec, date: today });
       updated.sort((a,b)=>a.moves - b.moves || a.timeSec - b.timeSec);
-      await setDoc(ref, { scores: updated.slice(0,5) });
+      await setDoc(ref, { scores: updated.slice(0,1) });
     }
   }catch(e){
     console.warn('alltime update:', e);
@@ -1582,11 +1586,11 @@ async function tryUpdateRecord(lv, moves, timeSec){
     const data = snap.exists() ? (snap.data().scores || []) : [];
     const ex = data.find(x => x.name === playerName);
 
-    if(!ex || moves < ex.moves){
+    if(!ex || isBetter({ moves, timeSec }, ex)){
       const updated = data.filter(x => x.name !== playerName);
       updated.push({ name: playerName, moves, timeSec });
       updated.sort((a,b)=>a.moves - b.moves || a.timeSec - b.timeSec);
-      await setDoc(ref, { scores: updated.slice(0,5) });
+      await setDoc(ref, { scores: updated.slice(0,3) });
     }
   }catch(e){
     console.warn('today update:', e);
@@ -1598,11 +1602,11 @@ async function tryUpdateRecord(lv, moves, timeSec){
 async function loadLeaderboard(lv){
   const l = (lv ?? S.level) + 1;
   const today = nyDateStr();
-  const medals = ['🥇','🥈','🥉','🏅','🏅'];
+  const medals = ['🥇','🥈','🥉'];
 
   const row = (x,i) => `
     <div class="lb-row${i===0?' lb-new':''}">
-      <span class="lb-rank">${medals[i]}</span>
+      <span class="lb-rank">${medals[i] || '🏅'}</span>
       <div class="lb-info">
         <div class="lb-name">${x.name}</div>
         <div class="lb-detail">Lv${l} · ${fmtTime(x.timeSec)}</div>
@@ -1615,7 +1619,9 @@ async function loadLeaderboard(lv){
     const snap = await getDoc(doc(db, 'leaderboard', 'alltime-lv' + l));
     const rows = snap.exists() ? (snap.data().scores || []) : [];
     const el = document.getElementById('lbAllTime');
-    if(el) el.innerHTML = rows.length ? rows.map(row).join('') : '<div class="chat-empty">No records yet~</div>';
+    if(el) el.innerHTML = rows.length
+      ? row(rows[0], 0)
+      : '<div class="chat-empty">No records yet~</div>';
   }catch(e){}
 
   try{
@@ -1623,7 +1629,9 @@ async function loadLeaderboard(lv){
     const snap = await getDoc(doc(db, 'leaderboard', tdKey));
     const rows = snap.exists() ? (snap.data().scores || []) : [];
     const el = document.getElementById('lbToday');
-    if(el) el.innerHTML = rows.length ? rows.map(row).join('') : '<div class="chat-empty">No records today~</div>';
+    if(el) el.innerHTML = rows.length
+      ? rows.slice(0,3).map(row).join('')
+      : '<div class="chat-empty">No records today~</div>';
   }catch(e){}
 }
 
