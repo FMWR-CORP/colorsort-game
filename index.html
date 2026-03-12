@@ -1328,6 +1328,7 @@ body{
       <button class="btn btn-undo" id="btnUndo" onclick="undoMove()" disabled>↩ Undo</button>
       <button class="btn btn-hint" id="btnHint" onclick="useHint()">💡 Hint <span class="hint-badge" id="hintBadge">3</span></button>
       <button class="btn btn-restart" onclick="restartLevel()">🔄 Restart</button>
+      <button class="btn btn-restart" onclick="newRandom()">🎲 New</button>
     </div>
 
     <div class="ready-overlay" id="readyOverlay">
@@ -1432,9 +1433,9 @@ const LEVELS = [
   {numColors:4,tubeSize:4,emptyTubes:2},
   {numColors:5,tubeSize:4,emptyTubes:2},
   {numColors:6,tubeSize:4,emptyTubes:2},
-  {numColors:7,tubeSize:4,emptyTubes:2},
-  {numColors:8,tubeSize:4,emptyTubes:2},
-  {numColors:9,tubeSize:4,emptyTubes:2},
+  {numColors:7,tubeSize:4,emptyTubes:1},
+  {numColors:8,tubeSize:4,emptyTubes:1},
+  {numColors:9,tubeSize:4,emptyTubes:1},
   {numColors:10,tubeSize:4,emptyTubes:2},
   {numColors:11,tubeSize:4,emptyTubes:2}
 ];
@@ -2045,11 +2046,15 @@ window.updateCharCount = updateCharCount;
 /* READY / PAUSE */
 let _paused = false;
 
-function initLevelWithReady(lv){
+function initLevelWithReady(lv, tubes){
   _paused = false;
   clearInterval(S.timerInterval);
+  const t = tubes || generateTubes(lv);
   S = {
-    level:lv, tubes:generateTubes(lv), selected:null,
+    level:lv,
+    tubes:t.map(x=>[...x]),
+    savedTubes:t.map(x=>[...x]),
+    selected:null,
     moves:0, hints:3, history:[], timerSec:0, timerInterval:null
   };
   document.getElementById('levelBadge').textContent = 'LEVEL '+(lv+1);
@@ -2063,6 +2068,37 @@ function initLevelWithReady(lv){
 }
 
 window.initLevel = initLevelWithReady;
+
+window.newRandom = function(){
+  sndClick();
+  initLevelWithReady(S.level);
+};
+
+window.restartLevel = function(){
+  sndClick();
+  _paused = false;
+  clearInterval(S.timerInterval);
+  const saved = S.savedTubes;
+  const lv = S.level;
+  S = {
+    level:lv,
+    tubes:saved.map(x=>[...x]),
+    savedTubes:saved.map(x=>[...x]),
+    selected:null,
+    moves:0, hints:3, history:[], timerSec:0, timerInterval:null
+  };
+  document.getElementById('levelBadge').textContent = 'LEVEL '+(lv+1);
+  document.getElementById('winOverlay').classList.remove('show');
+  document.getElementById('pauseOverlay').classList.remove('show');
+  document.getElementById('readyOverlay').classList.remove('show');
+  document.getElementById('timerDisplay').textContent = '00:00';
+  render();
+  renderLevelSelector();
+  S.timerInterval = setInterval(()=>{
+    S.timerSec++;
+    document.getElementById('timerDisplay').textContent = fmtTime(S.timerSec);
+  }, 1000);
+};
 
 window.startRound = function(){
   sndClick();
