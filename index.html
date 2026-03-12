@@ -1396,7 +1396,11 @@ body{
     </div>
     <div class="win-btns">
       <button class="btn-next" id="btnNext" onclick="nextLevel()">Next Level →</button>
-      <button class="btn-share" onclick="shareScore()">📋 Copy Score</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-share" onclick="shareScore('copy')" style="flex:1;">📋 Copy</button>
+        <button class="btn-share" onclick="shareScore('facebook')" style="flex:1;background:#1877f2;color:white;border-color:#1877f2;">f Share</button>
+        <button class="btn-share" onclick="shareScore('x')" style="flex:1;background:#000;color:white;border-color:#000;">𝕏 Post</button>
+      </div>
       <button class="btn-replay" id="btnReplay" style="display:none" onclick="initLevel(0)">↩ Play from Level 1</button>
     </div>
   </div>
@@ -1776,12 +1780,53 @@ async function sendChat(){
 }
 
 /* SHARE */
-function shareScore(){
+function shareScore(target){
   const txt = `🎨 Color Sort — Level ${S.level+1}\n👣 ${S.moves} moves · ⏱ ${fmtTime(S.timerSec)}\nPlay at nerdyssey.net`;
-  navigator.clipboard.writeText(txt)
-    .then(()=>showToast('Score copied! 📋'))
-    .catch(()=>showToast('Copy failed 😅'));
+  const url = 'https://nerdyssey.net';
+  const encoded = encodeURIComponent(txt);
+
+  if(target === 'facebook'){
+    const fbUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encoded}`;
+    window.open(fbUrl, '_blank', 'width=600,height=400');
+    sndClick();
+    return;
+  }
+
+  if(target === 'x'){
+    const xUrl = `https://twitter.com/intent/tweet?text=${encoded}`;
+    window.open(xUrl, '_blank', 'width=600,height=400');
+    sndClick();
+    return;
+  }
+
+  // copy
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt)
+      .then(()=>showToast('Score copied! 📋'))
+      .catch(()=>{
+        fallbackCopy(txt);
+      });
+  } else {
+    fallbackCopy(txt);
+  }
   sndClick();
+}
+
+function fallbackCopy(txt){
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try{
+    document.execCommand('copy');
+    showToast('Score copied! 📋');
+  }catch(e){
+    showToast('Copy failed 😅');
+  }
+  document.body.removeChild(ta);
 }
 
 /* GAME */
@@ -2037,6 +2082,7 @@ window.useHint = useHint;
 window.restartLevel = restartLevel;
 window.nextLevel = nextLevel;
 window.shareScore = shareScore;
+window.fallbackCopy = fallbackCopy;
 window.setName = setName;
 window.sendChat = sendChat;
 window.jumpLevel = jumpLevel;
