@@ -1170,22 +1170,56 @@ body{
   box-shadow:0 2px 0 var(--purd);
 }
 
+.share-row{
+  display:flex;
+  gap:8px;
+  width:100%;
+  margin-top:0;
+}
+
+.btn-share-x,.btn-share-bsky,.btn-share-fb{
+  flex:1;
+  background:var(--card2);
+  color:var(--pur);
+  font-family:var(--fb);
+  font-size:17px;
+  font-weight:bold;
+  padding:11px 6px;
+  border-radius:16px;
+  border:2px solid var(--border);
+  box-shadow:0 3px 0 rgba(180,100,200,0.18);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform 0.1s,box-shadow 0.1s;
+  position:relative;
+  overflow:hidden;
+}
+
+.btn-share-x{ background:#000;color:#fff;border-color:#333; }
+.btn-share-bsky{ background:#0085ff;color:#fff;border-color:#006acc; }
+.btn-share-fb{ background:#1877f2;color:#fff;border-color:#1060cc; }
+
+.btn-share-x:hover,.btn-share-bsky:hover,.btn-share-fb:hover{ transform:translateY(-2px); }
+.btn-share-x:active,.btn-share-bsky:active,.btn-share-fb:active{ transform:translateY(2px); }
+
 .btn-share{
+  flex:1;
   background:var(--card2);
   color:var(--pur);
   font-family:var(--fb);
   font-size:15px;
   letter-spacing:1px;
-  padding:11px 20px;
+  padding:11px 10px;
   border-radius:16px;
   border:2px solid var(--border);
   box-shadow:0 3px 0 rgba(180,100,200,0.18);
-  width:100%;
   cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
+  gap:4px;
   transition:transform 0.1s;
   position:relative;
   overflow:hidden;
@@ -1328,7 +1362,6 @@ body{
       <button class="btn btn-undo" id="btnUndo" onclick="undoMove()" disabled>↩ Undo</button>
       <button class="btn btn-hint" id="btnHint" onclick="useHint()">💡 Hint <span class="hint-badge" id="hintBadge">3</span></button>
       <button class="btn btn-restart" onclick="restartLevel()">🔄 Restart</button>
-      <button class="btn btn-restart" onclick="newRandom()">🎲 New</button>
     </div>
 
     <div class="ready-overlay" id="readyOverlay">
@@ -1397,7 +1430,12 @@ body{
     </div>
     <div class="win-btns">
       <button class="btn-next" id="btnNext" onclick="nextLevel()">Next Level →</button>
-      <button class="btn-share" onclick="shareScore()">📋 Copy Score</button>
+      <div class="share-row">
+        <button class="btn-share-x" onclick="shareToX()" title="Share to X">𝕏</button>
+        <button class="btn-share-bsky" onclick="shareToBluesky()" title="Share to Bluesky">🦋</button>
+        <button class="btn-share-fb" onclick="shareToFacebook()" title="Share to Facebook">f</button>
+        <button class="btn-share" onclick="copyScore()" title="Copy to clipboard">📋</button>
+      </div>
       <button class="btn-replay" id="btnReplay" style="display:none" onclick="initLevel(0)">↩ Play from Level 1</button>
     </div>
   </div>
@@ -1672,7 +1710,7 @@ async function loadLeaderboard(lv){
     if(el) el.innerHTML = rows.length
       ? row(rows[0], 0)
       : '<div class="chat-empty">No records yet~</div>';
-  }catch(e){}
+  }catch(e){ console.warn('loadLeaderboard alltime:', e); }
 
   try{
     const tdKey = 'today-lv' + l + '-' + today.replace(/\//g, '-');
@@ -1682,7 +1720,7 @@ async function loadLeaderboard(lv){
     if(el) el.innerHTML = rows.length
       ? rows.slice(0,3).map(row).join('')
       : '<div class="chat-empty">No records today~</div>';
-  }catch(e){}
+  }catch(e){ console.warn('loadLeaderboard today:', e); }
 }
 
 /* CHAT */
@@ -1777,13 +1815,58 @@ async function sendChat(){
 }
 
 /* SHARE */
-function shareScore(){
-  const txt = `🎨 Color Sort — Level ${S.level+1}\n👣 ${S.moves} moves · ⏱ ${fmtTime(S.timerSec)}\nPlay at nerdyssey.net`;
-  navigator.clipboard.writeText(txt)
-    .then(()=>showToast('Score copied! 📋'))
-    .catch(()=>showToast('Copy failed 😅'));
+function getShareText(){
+  return `🎨 Color Sort — Level ${S.level+1}\n👣 ${S.moves} moves · ⏱ ${fmtTime(S.timerSec)}\nPlay at nerdyssey.net`;
+}
+
+function shareToX(){
+  const text = encodeURIComponent(getShareText());
+  window.open('https://x.com/intent/tweet?text=' + text, '_blank');
   sndClick();
 }
+
+function shareToBluesky(){
+  const text = encodeURIComponent(getShareText());
+  window.open('https://bsky.app/intent/compose?text=' + text, '_blank');
+  sndClick();
+}
+
+function shareToFacebook(){
+  const url = encodeURIComponent('https://nerdyssey.net');
+  const quote = encodeURIComponent(getShareText());
+  window.open('https://www.facebook.com/sharer/sharer.php?u=' + url + '&quote=' + quote, '_blank');
+  sndClick();
+}
+
+function copyScore(){
+  const txt = getShareText();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt)
+      .then(()=>showToast('Score copied! 📋'))
+      .catch(()=>fallbackCopy(txt));
+  } else {
+    fallbackCopy(txt);
+  }
+  sndClick();
+}
+
+function fallbackCopy(txt){
+  const ta = document.createElement('textarea');
+  ta.value = txt;
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try{
+    document.execCommand('copy');
+    showToast('Score copied! 📋');
+  }catch(e){
+    showToast('Copy failed 😅');
+  }
+  document.body.removeChild(ta);
+}
+
+function shareScore(){ copyScore(); }
 
 /* GAME */
 function generateTubes(lv){
@@ -2038,6 +2121,10 @@ window.useHint = useHint;
 window.restartLevel = restartLevel;
 window.nextLevel = nextLevel;
 window.shareScore = shareScore;
+window.shareToX = shareToX;
+window.shareToBluesky = shareToBluesky;
+window.shareToFacebook = shareToFacebook;
+window.copyScore = copyScore;
 window.setName = setName;
 window.sendChat = sendChat;
 window.jumpLevel = jumpLevel;
@@ -2046,15 +2133,11 @@ window.updateCharCount = updateCharCount;
 /* READY / PAUSE */
 let _paused = false;
 
-function initLevelWithReady(lv, tubes){
+function initLevelWithReady(lv){
   _paused = false;
   clearInterval(S.timerInterval);
-  const t = tubes || generateTubes(lv);
   S = {
-    level:lv,
-    tubes:t.map(x=>[...x]),
-    savedTubes:t.map(x=>[...x]),
-    selected:null,
+    level:lv, tubes:generateTubes(lv), selected:null,
     moves:0, hints:3, history:[], timerSec:0, timerInterval:null
   };
   document.getElementById('levelBadge').textContent = 'LEVEL '+(lv+1);
@@ -2068,37 +2151,6 @@ function initLevelWithReady(lv, tubes){
 }
 
 window.initLevel = initLevelWithReady;
-
-window.newRandom = function(){
-  sndClick();
-  initLevelWithReady(S.level);
-};
-
-window.restartLevel = function(){
-  sndClick();
-  _paused = false;
-  clearInterval(S.timerInterval);
-  const saved = S.savedTubes;
-  const lv = S.level;
-  S = {
-    level:lv,
-    tubes:saved.map(x=>[...x]),
-    savedTubes:saved.map(x=>[...x]),
-    selected:null,
-    moves:0, hints:3, history:[], timerSec:0, timerInterval:null
-  };
-  document.getElementById('levelBadge').textContent = 'LEVEL '+(lv+1);
-  document.getElementById('winOverlay').classList.remove('show');
-  document.getElementById('pauseOverlay').classList.remove('show');
-  document.getElementById('readyOverlay').classList.remove('show');
-  document.getElementById('timerDisplay').textContent = '00:00';
-  render();
-  renderLevelSelector();
-  S.timerInterval = setInterval(()=>{
-    S.timerSec++;
-    document.getElementById('timerDisplay').textContent = fmtTime(S.timerSec);
-  }, 1000);
-};
 
 window.startRound = function(){
   sndClick();
