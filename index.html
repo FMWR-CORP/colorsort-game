@@ -1184,30 +1184,46 @@ body{
 
 .btn-share-x,.btn-share-bsky,.btn-share-fb{
   flex:1;
-  background:var(--card2);
-  color:var(--pur);
   font-family:var(--fb);
   font-size:17px;
   font-weight:bold;
   padding:11px 6px;
   border-radius:16px;
-  border:2px solid var(--border);
-  box-shadow:0 3px 0 rgba(180,100,200,0.18);
   cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
   transition:transform 0.1s,box-shadow 0.1s;
-  position:relative;
-  overflow:hidden;
 }
 
-.btn-share-x{ background:#000;color:#fff;border-color:#333; }
-.btn-share-bsky{ background:#0085ff;color:#fff;border-color:#006acc; }
-.btn-share-fb{ background:#1877f2;color:#fff;border-color:#1060cc; }
+.btn-share-x{ background:#000;color:#fff;border:2px solid #333;box-shadow:0 3px 0 #333; }
+.btn-share-bsky{ background:#0085ff;color:#fff;border:2px solid #006acc;box-shadow:0 3px 0 #005bb5; }
+.btn-share-fb{ background:#1877f2;color:#fff;border:2px solid #1060cc;box-shadow:0 3px 0 #0a4fa8; }
 
 .btn-share-x:hover,.btn-share-bsky:hover,.btn-share-fb:hover{ transform:translateY(-2px); }
-.btn-share-x:active,.btn-share-bsky:active,.btn-share-fb:active{ transform:translateY(2px); }
+.btn-share-x:active,.btn-share-bsky:active,.btn-share-fb:active{ transform:translateY(2px);box-shadow:none; }
+
+.btn-share-native{
+  flex:1;
+  background:var(--pur);
+  color:#fff;
+  font-family:var(--fb);
+  font-size:15px;
+  letter-spacing:1px;
+  padding:11px 14px;
+  border-radius:16px;
+  border:2px solid rgba(255,255,255,0.2);
+  box-shadow:0 3px 0 var(--purd);
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  transition:transform 0.1s,box-shadow 0.1s;
+}
+
+.btn-share-native:hover{ transform:translateY(-2px);box-shadow:0 5px 0 var(--purd); }
+.btn-share-native:active{ transform:translateY(2px);box-shadow:0 1px 0 var(--purd); }
 
 .btn-share{
   flex:1;
@@ -1825,29 +1841,42 @@ function getShareText(){
 }
 
 function openPopup(url){
-  const w = 560, h = 560;
+  const w = 580, h = 520;
   const left = Math.round(screen.width/2 - w/2);
   const top = Math.round(screen.height/2 - h/2);
   window.open(url, 'share', `width=${w},height=${h},left=${left},top=${top},toolbar=0,menubar=0,scrollbars=1,resizable=1`);
 }
 
 function shareToX(){
-  const text = encodeURIComponent(getShareText());
-  openPopup('https://x.com/intent/tweet?text=' + text);
+  openPopup('https://x.com/intent/tweet?text=' + encodeURIComponent(getShareText()));
   sndClick();
 }
 
 function shareToBluesky(){
-  const text = encodeURIComponent(getShareText());
-  openPopup('https://bsky.app/intent/compose?text=' + text);
+  openPopup('https://bsky.app/intent/compose?text=' + encodeURIComponent(getShareText()));
   sndClick();
 }
 
 function shareToFacebook(){
-  const url = encodeURIComponent('https://nerdyssey.net');
-  const quote = encodeURIComponent(getShareText());
-  openPopup('https://www.facebook.com/sharer/sharer.php?u=' + url + '&quote=' + quote);
+  openPopup('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent('https://nerdyssey.net') + '&quote=' + encodeURIComponent(getShareText()));
   sndClick();
+}
+
+async function nativeShare(){
+  sndClick();
+  if(navigator.share){
+    try{
+      await navigator.share({
+        title: '🎨 Color Sort',
+        text: getShareText(),
+        url: 'https://nerdyssey.net'
+      });
+    }catch(e){
+      if(e.name !== 'AbortError') showToast('Share failed 😅');
+    }
+  } else {
+    copyScore();
+  }
 }
 
 function copyScore(){
@@ -2137,6 +2166,7 @@ window.shareToX = shareToX;
 window.shareToBluesky = shareToBluesky;
 window.shareToFacebook = shareToFacebook;
 window.copyScore = copyScore;
+window.nativeShare = nativeShare;
 window.setName = setName;
 window.sendChat = sendChat;
 window.jumpLevel = jumpLevel;
